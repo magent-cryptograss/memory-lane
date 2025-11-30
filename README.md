@@ -1,6 +1,8 @@
 # Memory Lane
 
-A persistent memory system for Claude agents. Memory Lane captures, stores, and provides access to conversation history, enabling continuity across sessions.
+A persistent memory system for LLM agents. Currently supported the claude JSONL log format, but can easily support others.  
+
+Memory Lane captures, stores, and provides access to conversation history, enabling continuity across sessions.
 
 ## About
 
