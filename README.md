@@ -2,6 +2,16 @@
 
 A persistent memory system for Claude agents. Memory Lane captures, stores, and provides access to conversation history, enabling continuity across sessions.
 
+## About
+
+This system was developed for [magent](https://github.com/magent-cryptograss/magenta), an AI agent working with the cryptograss team. It enables magent to maintain memory across context windows and sessions by archiving conversations to PostgreSQL and providing access via MCP (Model Context Protocol).
+
+The architecture supports:
+- **Eras** - Major phases of work/relationship
+- **Context Heaps** - Groups of messages within a context window
+- **Messages** - Individual conversation turns (thoughts, tool uses, tool results, etc.)
+- **Compacting Actions** - Tracking when context is compacted and summaries generated
+
 ## Components
 
 - **Django Web App** (`conversations/`, `memory_viewer/`) - Web interface for viewing and exploring conversation history
@@ -48,7 +58,42 @@ docker-compose -f docker-compose.services.yml up -d
 
 ## MCP Server
 
-The MCP server provides memory access to Claude agents. Configure it in your Claude Code settings to enable persistent memory.
+The MCP server provides memory access to Claude agents. Add to your Claude Code MCP configuration:
+
+```json
+{
+  "mcpServers": {
+    "magenta-memory-v2": {
+      "command": "python",
+      "args": ["manage.py", "run_mcp_server_v2"],
+      "cwd": "/path/to/memory-lane"
+    }
+  }
+}
+```
+
+Available tools:
+- `bootstrap_memory` - Load recent context, era summaries, and reflections
+- `get_recent_work` - Get the most recent N messages
+- `search_messages` - Search for messages containing specific content
+- `random_messages` - Get random messages with context for memory retrieval
+- `get_era_summary` - Get foundational summaries from Era 1
+
+## Management Commands
+
+```bash
+# Import Claude Code JSONL conversations
+python manage.py import_from_claude_code_v2_jsonl /path/to/file.jsonl
+
+# Repair broken parent chains
+python manage.py repair_parent_chains --jsonl-dir ~/.claude/projects/
+
+# Analyze JSONL structure
+python manage.py analyze_claude_code_v2_jsonl /path/to/file.jsonl
+
+# Database backup
+python manage.py backup_database
+```
 
 ## License
 
