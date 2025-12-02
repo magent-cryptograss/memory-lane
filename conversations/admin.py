@@ -23,9 +23,21 @@ class ThinkingEntityAdmin(admin.ModelAdmin):
 
 @admin.register(Era)
 class EraAdmin(admin.ModelAdmin):
-    list_display = ('name', 'created_at')
+    list_display = ('name', 'is_current', 'created_at')
+    list_filter = ('is_current',)
     search_fields = ('name',)
     readonly_fields = ('id', 'created_at')
+    actions = ['make_current']
+
+    @admin.action(description='Set as current era')
+    def make_current(self, request, queryset):
+        if queryset.count() != 1:
+            self.message_user(request, 'Please select exactly one era to make current.', level='error')
+            return
+        era = queryset.first()
+        era.is_current = True
+        era.save()
+        self.message_user(request, f'"{era.name}" is now the current era.')
 
 
 @admin.register(ContextHeap)

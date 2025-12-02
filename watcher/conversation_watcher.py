@@ -296,7 +296,6 @@ def main():
     """Run the watcher service."""
     # Configuration
     WATCH_DIR = os.getenv('CLAUDE_LOGS_DIR', '/home/magent/.claude/project-logs')
-    ERA_NAME = os.getenv('WATCHER_ERA_NAME', 'Current Working Era (Era N)')
     REMOTE_ENDPOINT = os.getenv('WATCHER_REMOTE_ENDPOINT', '')  # e.g., https://memory-lane.maybelle.cryptograss.live/api/ingest/
 
     # Support for multi-user directories
@@ -311,11 +310,11 @@ def main():
         # Local mode - need Django database
         init_django()
         from conversations.models import Era
-        era, created = Era.objects.get_or_create(name=ERA_NAME)
-        if created:
-            logger.info(f"Created new era: {ERA_NAME}")
-        else:
-            logger.info(f"Using existing era: {ERA_NAME}")
+        era = Era.get_current()
+        if era is None:
+            logger.error("No current era set in database! Set an era's is_current=True via admin or shell.")
+            raise SystemExit(1)
+        logger.info(f"Using current era from database: {era.name}")
 
     # Create observer
     observer = Observer()

@@ -91,11 +91,30 @@ class Era(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, unique=True)
+    is_current = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = 'eras'
         ordering = ['created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['is_current'],
+                condition=models.Q(is_current=True),
+                name='unique_current_era'
+            )
+        ]
+
+    def save(self, *args, **kwargs):
+        if self.is_current:
+            # Unset any other current era
+            Era.objects.filter(is_current=True).exclude(pk=self.pk).update(is_current=False)
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def get_current(cls):
+        """Returns the current era, or None if none is set."""
+        return cls.objects.filter(is_current=True).first()
 
     def earliest_blockheight(self):
         """Returns the earliest blockheight from all messages in this era."""
